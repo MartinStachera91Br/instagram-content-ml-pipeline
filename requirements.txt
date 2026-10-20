@@ -1,0 +1,37 @@
+# Genna Content Machine — Data Pipeline
+# Install: pip install -r requirements.txt
+
+# === Core Data ===
+pandas>=2.2.0
+numpy>=2.0.0
+
+# === File & Media Processing ===
+ffmpeg-python>=0.2.0       # Video metadata (duration, resolution, etc.)
+Pillow>=11.0.0             # Image processing
+opencv-python>=4.10.0      # Video frame extraction, cuts detection
+
+# === AI Models — APIs ===
+openai>=1.60.0             # GPT-4o for feature extraction
+google-genai>=1.0.0        # Gemini Flash for feature extraction
+openai-whisper>=20240930   # Speech-to-text (local, free)
+
+# === Data Export & Storage ===
+pyarrow>=18.0.0            # Parquet support for DataFrames
+openpyxl>=3.1.0            # Excel read/write
+
+# === Environment & Config ===
+python-dotenv>=1.0.0       # Load .env variables
+
+# === Data Science & Visualization ===
+matplotlib>=3.10.0         # Plots and charts
+seaborn>=0.13.0            # Statistical visualizations
+scipy>=1.14.0              # Statistical tests
+scikit-learn>=1.5.0        # ML models, clustering, metrics
+
+# === Jupyter ===
+jupyter>=1.1.0             # Notebook environment
+ipykernel>=7.0.0           # Jupyter kernel
+
+# === Utilities ===
+tqdm>=4.67.0               # Progress bars
+requests>=2.32.0           # HTTP requests

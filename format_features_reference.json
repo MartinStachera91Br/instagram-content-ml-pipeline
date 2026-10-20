@@ -1,0 +1,253 @@
+{
+  "title": "Format-Specific Features",
+  "description": "Features specific to this content format, proposed by AI and confirmed by human.",
+  "feature_count": 15,
+  "features": [
+    {
+      "name": "plot_twist_strength",
+      "description": "The intensity and surprise factor of the plot twist or revelation.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "presenter_combination",
+      "description": "The combination of presenters used in the video.",
+      "type": "categorical",
+      "possible_values": [
+        {
+          "value": "presenter_a"
+        },
+        {
+          "value": "presenter_b"
+        },
+        {
+          "value": "presenter_c"
+        },
+        {
+          "value": "guest"
+        },
+        {
+          "value": "presenter_a_presenter_b"
+        },
+        {
+          "value": "presenter_a_presenter_c"
+        },
+        {
+          "value": "presenter_b_presenter_c"
+        },
+        {
+          "value": "presenter_a_guest"
+        },
+        {
+          "value": "presenter_b_guest"
+        },
+        {
+          "value": "presenter_c_guest"
+        }
+      ]
+    },
+    {
+      "name": "subject_type",
+      "description": "The type of subject discussed in the video.",
+      "type": "categorical",
+      "possible_values": [
+        {
+          "value": "company"
+        },
+        {
+          "value": "person"
+        },
+        {
+          "value": "strategy"
+        },
+        {
+          "value": "cultural_trend"
+        }
+      ]
+    },
+    {
+      "name": "relatability_score",
+      "description": "How relatable the story is to social media and marketing professionals.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "educational_entertainment_balance",
+      "description": "The balance between educational content and entertainment.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "hook_strength",
+      "description": "The effectiveness of the hook in capturing attention in the first few seconds.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "use_of_specific_numbers",
+      "description": "Presence of specific numbers, revenue figures, or growth stats in the video.",
+      "type": "boolean",
+      "possible_values": [
+        {
+          "value": "true"
+        },
+        {
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "name": "narrative_complexity",
+      "description": "The complexity of the narrative structure.",
+      "type": "categorical",
+      "possible_values": [
+        {
+          "value": "single_arc"
+        },
+        {
+          "value": "layered"
+        }
+      ]
+    },
+    {
+      "name": "tone_of_voice",
+      "description": "The tone of voice used by the presenters.",
+      "type": "categorical",
+      "possible_values": [
+        {
+          "value": "provocative"
+        },
+        {
+          "value": "engaging"
+        },
+        {
+          "value": "colloquial"
+        }
+      ]
+    },
+    {
+      "name": "pop_culture_focus",
+      "description": "Whether the topic is focused more on pop culture or business.",
+      "type": "categorical",
+      "possible_values": [
+        {
+          "value": "business"
+        },
+        {
+          "value": "pop_culture"
+        }
+      ]
+    },
+    {
+      "name": "call_to_action_quality",
+      "description": "Effectiveness and clarity of the call to action.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "cultural_relevance",
+      "description": "Relevance of the topic to current cultural trends.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "audience_familiarity_with_subject",
+      "description": "How well-known the subject is to the audience.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "presenter_energy_level",
+      "description": "The energy level of the presenters during the video.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    },
+    {
+      "name": "visual_relevance",
+      "description": "Relevance of visual elements to the story being told.",
+      "type": "numeric",
+      "possible_values": [
+        {
+          "value": "0",
+          "description": "Minimum"
+        },
+        {
+          "value": "10",
+          "description": "Maximum"
+        }
+      ]
+    }
+  ]
+}

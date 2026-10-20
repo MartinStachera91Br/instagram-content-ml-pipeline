@@ -1,0 +1,609 @@
+{
+  "title": "GENNA - Complete Feature Engineering System",
+  "description": "62 Features Across 7 Categories for Instagram Post Analysis",
+  "notes": "R = Reels, C = Carousels, I = Single Images. Prompts include {caption_text}, {whisper_transcript}, {ocr_text}, {caption_first_line} placeholders.",
+  "categories": [
+    {
+      "name": "Visual & Production",
+      "features": [
+        {
+          "id": 1,
+          "name": "video_duration_sec",
+          "applies_to": "R",
+          "possible_values": "Numeric (seconds). Range: 1–5400. Measured from first to last frame of the published Reel.",
+          "model": "Local (free)",
+          "model_detail": "FFprobe (local CLI) — no AI needed",
+          "prompt": "N/A — Extract programmatically using FFprobe: ffprobe -v error -show_entries format=duration -of csv=p=0 <file>. Return the integer number of seconds rounded down."
+        },
+        {
+          "id": 2,
+          "name": "carousel_slide_count",
+          "applies_to": "C",
+          "possible_values": "Numeric (integer). Range: 2–20. Count of individual slides in a carousel post.",
+          "model": "API metadata",
+          "model_detail": "Instagram API / Metadata extraction — no AI needed",
+          "prompt": "N/A — Extract programmatically from Instagram API field \"children.data.length\" or equivalent metadata. Return the integer count of slides."
+        },
+        {
+          "id": 3,
+          "name": "aspect_ratio",
+          "applies_to": "R; C; I",
+          "possible_values": "vertical_9x16 — 9:16 portrait, standard Reels; vertical_4x5 — 4:5 portrait, feed-optimized; square_1x1 — 1:1 square format; horizontal_16x9 — 16:9 landscape; horizontal_other — any other landscape ratio; other — non-standard ratio",
+          "model": "Local (free)",
+          "model_detail": "FFprobe / Pillow (local) — no AI needed",
+          "prompt": "N/A — Extract width and height programmatically. Classify: if w/h ≈ 0.5625 → vertical_9x16; if w/h ≈ 0.8 → vertical_4x5; if w/h ≈ 1.0 → square_1x1; if w/h ≈ 1.778 → horizontal_16x9; if w/h > 1.0 and not 16:9 → horizontal_other; else → other. Use ±5% tolerance. Return only the category string."
+        },
+        {
+          "id": 4,
+          "name": "cuts_per_minute",
+          "applies_to": "R",
+          "possible_values": "Numeric (float, 1 decimal). Range: 0.0–60.0+. Number of scene transitions per minute of video. Analyze the full video.",
+          "model": "Mixed",
+          "model_detail": "PySceneDetect (local CV) + calculation — no AI needed",
+          "prompt": "N/A — Use PySceneDetect ContentDetector to count scene changes across the full video. Formula: (scene_count - 1) / (duration_sec / 60). Return float rounded to 1 decimal."
+        },
+        {
+          "id": 5,
+          "name": "text_overlay_presence",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no visible text overlaid on content; lower_third — text in bottom third only; upper_third — text in top third only; center — text in center area of frame; full_screen — text covers most of the frame; multi_zone — text in 2+ distinct areas",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze this image/frame for text overlaid on the visual content (NOT captions in the post description). Where is the text overlay positioned? Respond with exactly one value from this list: none; lower_third; upper_third; center; full_screen; multi_zone. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 6,
+          "name": "dominant_color_palette",
+          "applies_to": "R; C; I",
+          "possible_values": "warm — reds, oranges, yellows dominate; cool — blues, greens, purples dominate; neutral — whites, blacks, grays, beiges dominate; pastel — soft, desaturated light tones; vibrant — highly saturated bold colors; dark_moody — low brightness, dark tones; earth_tones — browns, tans, olive greens; monochrome — single color hue with variations; mixed — no single palette dominates",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze the overall color palette of this image/frame. What is the dominant color palette? Respond with exactly one value from this list: warm; cool; neutral; pastel; vibrant; dark_moody; earth_tones; monochrome; mixed. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 7,
+          "name": "lighting_type",
+          "applies_to": "R; C; I",
+          "possible_values": "natural_daylight — sunlight or window light, daytime; golden_hour — warm sunset or sunrise tones; artificial_studio — ring light, softbox, professional studio; artificial_ambient — indoor lamps, overhead lighting; low_light — dark environment, nighttime; neon_colored — neon signs, colored LED lights; mixed — combination of multiple light sources; screen_light — lit primarily by phone or monitor glow; flash — direct camera flash visible",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the lighting in this image/frame. What is the primary lighting type? Respond with exactly one value from this list: natural_daylight; golden_hour; artificial_studio; artificial_ambient; low_light; neon_colored; mixed; screen_light; flash. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 8,
+          "name": "camera_movement_style",
+          "applies_to": "R",
+          "possible_values": "static — camera does not move, tripod or fixed; handheld — slight natural shake, person-held; smooth_pan — horizontal glide left/right; smooth_tilt — vertical glide up/down; tracking — camera follows a moving subject; dolly_zoom — push in or pull out on subject; whip_pan — fast horizontal sweep between scenes; orbit — camera circles around subject; pov — first-person point-of-view movement; drone_aerial — overhead or aerial perspective movement; mixed — multiple movement styles used. Analyze the full video.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the camera movement throughout this entire video. What is the PRIMARY camera movement style used most frequently? Respond with exactly one value from this list: static; handheld; smooth_pan; smooth_tilt; tracking; dolly_zoom; whip_pan; orbit; pov; drone_aerial; mixed. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 9,
+          "name": "hook_visual_technique",
+          "applies_to": "R",
+          "possible_values": "face_close_up — person's face fills the frame; product_close_up — object or product shown in detail; text_hook — bold text dominates the opening frame; action_in_progress — movement or activity already happening; reveal_tease — partial view that builds curiosity; before_after — shows a transformation starting point; screen_recording — phone or computer screen capture; reaction_shot — person reacting to something; pattern_interrupt — unexpected or jarring visual; static_scene — still or slow opening with no strong visual hook. Analyze ONLY the first 3 seconds.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze ONLY the first 3 seconds of this video. What visual technique is used to hook the viewer? Respond with exactly one value from this list: face_close_up; product_close_up; text_hook; action_in_progress; reveal_tease; before_after; screen_recording; reaction_shot; pattern_interrupt; static_scene. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 10,
+          "name": "visual_format_type",
+          "applies_to": "R",
+          "possible_values": "talking_head — person speaking directly to camera; b_roll_only — footage montage with no person on screen; talking_head_with_broll — person speaking intercut with footage; screen_capture — screencast or phone recording; slideshow — static images or text slides with transitions; animation_motion — animated graphics or motion design; split_screen — two or more frames visible simultaneously; green_screen — background replaced with image or video; lip_sync — person lip-syncing to audio; tutorial_hands — hands-on demonstration, how-to angle; vlog_style — casual moving-camera daily life content; interview — two or more people in conversation. Analyze the full video.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze this entire video. What is the PRIMARY visual format? Respond with exactly one value from this list: talking_head; b_roll_only; talking_head_with_broll; screen_capture; slideshow; animation_motion; split_screen; green_screen; lip_sync; tutorial_hands; vlog_style; interview. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 11,
+          "name": "transition_style",
+          "applies_to": "R",
+          "possible_values": "none — no transitions, single continuous shot; hard_cut — abrupt cuts between scenes; match_cut — seamless spatial or movement matching; swipe — directional swipe between scenes; zoom_transition — zoom in/out to next scene; fade — fade to black/white between scenes; whip — fast pan connecting scenes; object_cover — object covers lens then reveals new scene; morph — one shape transforms into another; mixed — multiple transition types used. Analyze the full video.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze the transitions used throughout this video. What is the PRIMARY transition style? Respond with exactly one value from this list: none; hard_cut; match_cut; swipe; zoom_transition; fade; whip; object_cover; morph; mixed. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 12,
+          "name": "face_presence",
+          "applies_to": "R; C; I",
+          "possible_values": "no_face — no human face visible; single_face — exactly one face visible; multiple_faces — two or more faces visible. For Reels: analyze the thumbnail / first frame. For Carousel: analyze the first slide. For Single Image: analyze the image.",
+          "model": "Local (free)",
+          "model_detail": "MTCNN / MediaPipe Face Detection (local CV) — no AI needed",
+          "prompt": "N/A — Use MTCNN or MediaPipe face detection on the target frame. If 0 faces detected → no_face; if 1 → single_face; if ≥2 → multiple_faces. Return only the category string."
+        },
+        {
+          "id": 13,
+          "name": "image_quality_score",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 1–10. Composite score: 1–3 = low quality (blurry, pixelated, poor lighting); 4–6 = average quality (acceptable but not polished); 7–8 = high quality (sharp, well-lit, good composition); 9–10 = professional quality (studio-grade, cinematic). For Reels: analyze 3 sampled frames (first, mid, last). For Carousel: analyze first slide. For Single Image: analyze the image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Rate the overall production quality of this image/frame on a scale from 1 to 10. Consider sharpness, resolution, lighting, color grading, and composition. 1-3 = low quality (blurry, pixelated, poor lighting); 4-6 = average quality; 7-8 = high quality (sharp, well-lit); 9-10 = professional/studio grade. Return ONLY a single integer from 1 to 10, nothing else."
+        },
+        {
+          "id": 14,
+          "name": "zoom_effect_used",
+          "applies_to": "R",
+          "possible_values": "none — no zoom effects; slow_zoom_in — gradual push toward subject; slow_zoom_out — gradual pull away from subject; fast_zoom_in — rapid punch-in for emphasis; fast_zoom_out — rapid pull-out for reveal; zoom_pulse — rhythmic zoom in/out synced to audio; mixed — multiple zoom types used. Analyze the full video.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze this video for any zoom effects applied (digital or physical zoom in/out). What is the PRIMARY zoom effect used? Respond with exactly one value from this list: none; slow_zoom_in; slow_zoom_out; fast_zoom_in; fast_zoom_out; zoom_pulse; mixed. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 15,
+          "name": "thumbnail_composition",
+          "applies_to": "R; C; I",
+          "possible_values": "centered_subject — main subject in the center; rule_of_thirds — subject placed on grid intersections; symmetrical — balanced mirror-like composition; asymmetrical — intentionally unbalanced, dynamic; close_up — subject fills 70%+ of frame; wide_shot — subject is small, environment dominates; flat_lay — overhead shot of objects on surface; text_dominant — text is the main visual element; collage — multiple images or elements arranged together; minimal — very few elements, lots of negative space",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the composition of this image (or first frame/thumbnail). What is the primary composition style? Respond with exactly one value from this list: centered_subject; rule_of_thirds; symmetrical; asymmetrical; close_up; wide_shot; flat_lay; text_dominant; collage; minimal. Return ONLY the value, nothing else."
+        }
+      ]
+    },
+    {
+      "name": "Hook & Attention",
+      "features": [
+        {
+          "id": 16,
+          "name": "audio_hook_type",
+          "applies_to": "R",
+          "possible_values": "voice_direct_address — speaker says \"you\" or speaks to viewer; voice_question — opens with a spoken question; voice_bold_claim — starts with a surprising statement or statistic; voice_story_opener — begins with \"So…\", \"I just…\", narrative lead-in; trending_sound — uses a recognizable trending audio clip; original_music — original or non-trending background music; sound_effect — starts with a distinct SFX (ding, whoosh, etc.); asmr_texture — tactile, whisper, or sensory-focused audio; silence — no audio or intentional silence in first 3 seconds; mixed — combination of two or more types above. Analyze ONLY the first 3 seconds of audio.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (video+audio input)",
+          "prompt": "Listen to ONLY the first 3 seconds of this video's audio. What type of audio hook is used? Respond with exactly one value from this list: voice_direct_address; voice_question; voice_bold_claim; voice_story_opener; trending_sound; original_music; sound_effect; asmr_texture; silence; mixed. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 17,
+          "name": "text_hook_on_screen",
+          "applies_to": "R; C; I",
+          "possible_values": "question — text asks a question to the viewer; bold_claim — strong statement or surprising stat; how_to — \"How to…\", instructional opener; listicle — \"5 things…\", \"3 reasons…\", numbered; curiosity_gap — incomplete info that demands click/swipe (\"You won't believe…\"); direct_command — \"Stop scrolling\", \"Watch this\", imperative verb; quote_or_testimonial — attributed quote or social proof; label_or_title — simple descriptive title, no hook intent; none — no text visible on screen. For Reels: analyze ONLY the first frame. For Carousel: first slide. For Single Image: the image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the visible text overlaid on this image/frame (ignore captions below the post). Classify the text hook type. Respond with exactly one value from this list: question; bold_claim; how_to; listicle; curiosity_gap; direct_command; quote_or_testimonial; label_or_title; none. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 18,
+          "name": "curiosity_gap_level",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–5. 0 = no curiosity gap at all, everything is revealed upfront; 1 = very mild, slight intrigue; 2 = moderate, viewer may want to know more; 3 = strong, clear information withheld to drive engagement; 4 = very strong, bold open loop that demands resolution; 5 = extreme, shocking or provocative tease with maximum withholding. For Reels: analyze first 3 seconds (video + text + audio). For Carousel: first slide (visual + text). For Single Image: the image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the opening of this content (first frame/slide and any visible text or audio context). Rate the curiosity gap on a scale from 0 to 5. 0 = no curiosity gap, everything revealed; 1 = very mild; 2 = moderate; 3 = strong, clear info withheld; 4 = very strong open loop; 5 = extreme, shocking tease. Return ONLY a single integer from 0 to 5, nothing else."
+        },
+        {
+          "id": 19,
+          "name": "pattern_interrupt_type",
+          "applies_to": "R; C; I",
+          "possible_values": "none — content blends with typical feed, no interrupt; visual_shock — unexpected image, jarring color, or extreme close-up; motion_burst — sudden fast movement or camera jerk; text_shock — provocative or contrarian text (\"This is wrong\", \"Delete this app\"); audio_spike — sudden loud sound, bass drop, or scream; fourth_wall_break — directly acknowledges the viewer scrolling (\"Wait, stop\"); format_break — looks like a meme, glitch, UI screenshot, or notification. For Reels: analyze first 3 seconds. For Carousel/Image: analyze first slide/image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the opening of this content (first 3 seconds for video, or the first image/slide). Is there a pattern interrupt — something designed to break the viewer's scroll momentum? Respond with exactly one value from this list: none; visual_shock; motion_burst; text_shock; audio_spike; fourth_wall_break; format_break. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 20,
+          "name": "opening_emotion_conveyed",
+          "applies_to": "R; C; I",
+          "possible_values": "excitement — high energy, enthusiasm, hype; humor — funny, comedic, lighthearted; curiosity — mysterious, intriguing, makes you lean in; shock — disbelief, outrage, jaw-drop; empathy — relatable pain, struggle, vulnerability; aspiration — inspirational, motivational, \"goals\"; fear_urgency — FOMO, warning, scarcity, time pressure; calm_trust — soothing, authoritative, educational tone; controversy — polarizing, debate-sparking, hot take; neutral — no clear emotion, flat or informational. For Reels: analyze first 3 seconds (visual + audio + text). For Carousel: first slide. For Single Image: the image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the emotional tone conveyed in the opening of this content (first 3 seconds for video, or first slide/image). What is the PRIMARY emotion the viewer is meant to feel? Respond with exactly one value from this list: excitement; humor; curiosity; shock; empathy; aspiration; fear_urgency; calm_trust; controversy; neutral. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 21,
+          "name": "first_frame_scroll_stop_score",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 1–10. Composite score rating how likely this first frame is to stop a user from scrolling. 1–3 = weak (generic, low contrast, no focal point); 4–6 = moderate (decent composition but nothing remarkable); 7–8 = strong (clear focal point, bold text or face, high contrast); 9–10 = exceptional (impossible to ignore, combines multiple scroll-stopping elements). Consider: visual contrast, text readability, face presence, emotional expression, color pop, composition clarity.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "You are an expert in Instagram content performance. Rate this image/first frame on its ability to stop a user from scrolling in their feed. Score from 1 to 10. Consider: visual contrast, bold text, face presence, emotional expression, color pop, and composition clarity. 1-3 = weak (generic, low contrast); 4-6 = moderate; 7-8 = strong (clear focal point, bold elements); 9-10 = exceptional (impossible to ignore). Return ONLY a single integer from 1 to 10, nothing else."
+        },
+        {
+          "id": 22,
+          "name": "hook_delivery_speed",
+          "applies_to": "R",
+          "possible_values": "instant — hook lands in first 1 second (text slap, face, loud audio); fast — hook lands between 1–2 seconds; moderate — hook lands between 2–3 seconds; slow_build — no clear hook in first 3 seconds, gradual ramp. Analyze ONLY the first 3 seconds.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (video input)",
+          "prompt": "Watch ONLY the first 3 seconds of this video. How quickly does the main hook (the element designed to capture attention) land? Respond with exactly one value from this list: instant; fast; moderate; slow_build. instant = within first 1 second; fast = 1-2 seconds; moderate = 2-3 seconds; slow_build = no clear hook in first 3 seconds. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 23,
+          "name": "direct_viewer_address",
+          "applies_to": "R; C; I",
+          "possible_values": "Boolean. yes — content directly addresses the viewer using \"you\", eye contact to camera, pointing, or second-person language in on-screen text; no — no direct address to the viewer. For Reels: analyze first 3 seconds (text + audio + visual). For Carousel: first slide text + visual. For Single Image: text + visual.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze this content (first 3 seconds for video, or the image/slide). Does the creator directly address the viewer? This includes: saying \"you\" in audio or text, making eye contact with the camera, pointing at the camera, or using second-person language in on-screen text. Respond with exactly one value: yes; no. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 24,
+          "name": "bait_and_reveal_structure",
+          "applies_to": "R; C",
+          "possible_values": "none — no bait/reveal structure present; before_after — shows \"before\" state, promises or delivers \"after\"; question_then_answer — poses question up front, answer comes later; problem_then_solution — presents a pain point, then solves it; tease_then_payoff — shows a teaser/preview, full reveal follows; ranking_or_countdown — builds toward a #1 or final reveal; mystery_box — hides something, builds suspense for the uncover. For Reels: analyze the full video structure. For Carousel: analyze all slides' flow.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the FULL structure of this content (all slides for carousel, or entire video for Reels). Does it use a bait-and-reveal structure where something is teased or withheld early and then revealed later? Respond with exactly one value from this list: none; before_after; question_then_answer; problem_then_solution; tease_then_payoff; ranking_or_countdown; mystery_box. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 25,
+          "name": "opening_subject_framing",
+          "applies_to": "R; C; I",
+          "possible_values": "face_extreme_closeup — face fills 80%+ of frame, intense eye contact; face_medium — face visible from chest up, conversational; hands_or_object — hands doing something or object in focus, no face; full_body — person's full body visible; environment_wide — wide shot, person is small or absent; text_only_frame — frame is entirely or mostly text, no person or object; screen_or_ui — phone screen, app UI, or computer display; product_hero — product or item centered as the star of the frame; abstract_graphic — pattern, gradient, illustration, or motion graphic. For Reels: analyze ONLY the first frame. For Carousel: first slide. For Single Image: the image.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze this image/first frame. What is the PRIMARY subject framing in the opening? Respond with exactly one value from this list: face_extreme_closeup; face_medium; hands_or_object; full_body; environment_wide; text_only_frame; screen_or_ui; product_hero; abstract_graphic. Return ONLY the value, nothing else."
+        }
+      ]
+    },
+    {
+      "name": "People & Talent",
+      "features": [
+        {
+          "id": 26,
+          "name": "people_count",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no person visible in frame; one — exactly one person visible; two — exactly two people visible; small_group — 3 to 5 people visible; crowd — 6 or more people visible. For Reels: analyze a representative frame from the first 3 seconds. For Carousel: analyze the first slide. For Single Image: analyze the image. Count only clearly visible people (partial limbs or silhouettes do not count).",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Count the number of clearly visible people in this image/frame (do not count partial limbs, silhouettes, or people in distant backgrounds who are unrecognizable). Respond with exactly one value from this list: none; one; two; small_group; crowd. none = 0 people; one = 1; two = 2; small_group = 3-5; crowd = 6+. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 27,
+          "name": "primary_person_age_range",
+          "applies_to": "R; C; I",
+          "possible_values": "child — appears under 13 years old; teen — appears 13–17 years old; young_adult — appears 18–29 years old; adult — appears 30–45 years old; middle_aged — appears 46–60 years old; senior — appears over 60 years old; mixed_ages — multiple people with clearly different age groups; not_applicable — no person visible or age not determinable. For Reels: analyze the first 3 seconds. For Carousel: first slide. For Single Image: the image. If multiple people, classify the PRIMARY person (most prominent / centered).",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the most prominent person visible in this image/frame. What is their apparent age range based solely on visual appearance? If multiple people are visible, classify the most prominent one. Respond with exactly one value from this list: child; teen; young_adult; adult; middle_aged; senior; mixed_ages; not_applicable. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 28,
+          "name": "eye_contact_with_camera",
+          "applies_to": "R; C; I",
+          "possible_values": "Boolean. yes — the primary person is looking directly into the camera lens, creating a sense of direct viewer connection; no — no person is looking at the camera (looking away, eyes closed, no face visible, or no person present). For Reels: analyze ONLY the first frame. For Carousel: first slide. For Single Image: the image.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze this image/frame. Is the most prominent person looking directly into the camera lens (making eye contact with the viewer)? Respond with exactly one value: yes; no. If no person is visible, respond no. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 29,
+          "name": "dominant_facial_expression",
+          "applies_to": "R; C; I",
+          "possible_values": "happy_smiling — genuine smile, joy, laughter; surprised_shocked — wide eyes, open mouth, disbelief; serious_neutral — calm, composed, no strong emotion; angry_frustrated — frown, clenched jaw, displeasure; sad_emotional — tearful, downcast, vulnerability; confident_smirk — self-assured, knowing look, slight smile; exaggerated_expressive — over-the-top reaction face, theatrical; focused_concentrated — intense focus, looking at task; not_applicable — no face visible, face obscured, or no person. For Reels: analyze ONLY the first frame. For Carousel: first slide. For Single Image: the image. Classify the PRIMARY person's expression.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze the facial expression of the most prominent person in this image/frame. What is their dominant expression? Respond with exactly one value from this list: happy_smiling; surprised_shocked; serious_neutral; angry_frustrated; sad_emotional; confident_smirk; exaggerated_expressive; focused_concentrated; not_applicable. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 30,
+          "name": "body_language_energy",
+          "applies_to": "R; C; I",
+          "possible_values": "high_energy — animated gestures, jumping, dancing, fast movement; moderate_energy — casual movement, hand gestures while talking, walking; low_energy — still, seated, minimal movement, relaxed posture; posed_static — deliberate fashion or portrait pose, no natural movement; not_applicable — no person visible or body not shown. For Reels: analyze the first 3 seconds of video (motion matters). For Carousel: first slide. For Single Image: the image.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze the body language and energy level of the most prominent person in this content (first 3 seconds for video, or the image/slide). Respond with exactly one value from this list: high_energy; moderate_energy; low_energy; posed_static; not_applicable. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 31,
+          "name": "talent_role_in_content",
+          "applies_to": "R",
+          "possible_values": "speaking_to_camera — person talks directly to viewer, educational or opinion format; narrating_offscreen — voice is heard but person is not on screen (or only briefly); performing — dancing, singing, lip-syncing, acting out a scene; demonstrating — showing how to do something, hands-on tutorial; reacting — watching or responding to something on screen; interviewing — two or more people in Q&A or conversation; lifestyle_passive — person is present but not actively performing (e.g., walking, posing, eating); no_person — no human talent in the video. Analyze the full video to determine the PRIMARY role.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze this entire video. What is the PRIMARY role of the main person (talent) in the content? Respond with exactly one value from this list: speaking_to_camera; narrating_offscreen; performing; demonstrating; reacting; interviewing; lifestyle_passive; no_person. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 32,
+          "name": "appearance_style",
+          "applies_to": "R; C; I",
+          "possible_values": "casual_everyday — t-shirt, jeans, athleisure, relaxed daily wear; professional_business — suit, blazer, business attire, office-ready; glamorous_styled — full makeup, styled hair, fashion-forward outfit; fitness_athletic — workout clothes, sportswear, gym setting; uniform_costume — work uniform, costume, cosplay, themed outfit; minimal_undone — pajamas, no makeup emphasis, \"just woke up\" look; not_applicable — no person visible or appearance not determinable. For Reels: analyze first 3 seconds. For Carousel: first slide. For Single Image: the image. Classify the PRIMARY person.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash",
+          "prompt": "Analyze the appearance and styling of the most prominent person in this image/frame. What best describes their appearance style? Respond with exactly one value from this list: casual_everyday; professional_business; glamorous_styled; fitness_athletic; uniform_costume; minimal_undone; not_applicable. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 33,
+          "name": "creator_camera_presence_score",
+          "applies_to": "R",
+          "possible_values": "Numeric (integer). Range: 1–10. Composite score rating the on-camera charisma and presence of the primary person. 1–3 = low presence (stiff, monotone, uncomfortable, avoids eye contact); 4–6 = moderate (functional delivery, neither engaging nor off-putting); 7–8 = strong (confident, expressive, holds attention naturally); 9–10 = exceptional (magnetic, commanding, professional-level screen presence). Consider: vocal energy, facial expressiveness, eye contact consistency, gesture naturalness, confidence. Analyze the full video. If no person speaks to camera, return 0.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "Analyze this entire video. Rate the on-camera presence and charisma of the primary person on a scale from 1 to 10. Consider: vocal energy, facial expressiveness, eye contact consistency, gesture naturalness, and confidence. 1-3 = low (stiff, monotone); 4-6 = moderate; 7-8 = strong (confident, expressive); 9-10 = exceptional (magnetic, commanding). If no person speaks to camera, return 0. Return ONLY a single integer from 0 to 10, nothing else."
+        }
+      ]
+    },
+    {
+      "name": "Audio & Music",
+      "features": [
+        {
+          "id": 34,
+          "name": "audio_source_type",
+          "applies_to": "R",
+          "possible_values": "original_voice_only — creator's own voice with no background music; original_voice_with_music — creator speaks over background music; voiceover_with_music — pre-recorded narration layered over music; trending_sound — uses a sound from Instagram's audio library that other creators have also used; original_music — creator's own music or a non-trending track; licensed_music_only — commercial song, no speech; sound_effects_only — SFX-driven audio, no speech or music; text_to_speech — AI-generated voice (robotic or synthetic); silent — no audio or muted content. Analyze the full audio track.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (video+audio input)",
+          "prompt": "Analyze the FULL audio track of this video. What is the primary audio source type? Respond with exactly one value from this list: original_voice_only; original_voice_with_music; voiceover_with_music; trending_sound; original_music; licensed_music_only; sound_effects_only; text_to_speech; silent. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 35,
+          "name": "speech_language",
+          "applies_to": "R",
+          "possible_values": "ISO 639-1 language code as the value (e.g., en, pt, es, fr, de, it, ja, ko, zh, ar, hi, etc.). none — no speech detected in the audio; mixed — two or more languages spoken in the video; unintelligible — speech is present but too unclear to determine language. Analyze the full audio. Return the language of the DOMINANT spoken portion.",
+          "model": "Whisper (free)",
+          "model_detail": "Whisper large-v3 (local)",
+          "prompt": "N/A — Two-step pipeline: (1) Run Whisper large-v3 with language detection enabled: whisper.transcribe(audio, task=\"transcribe\"). Extract the detected language code from result[\"language\"]. (2) If no speech segments detected → \"none\". If Whisper detects multiple language switches → \"mixed\". If confidence < 0.5 → \"unintelligible\". Return only the ISO 639-1 code or status string."
+        },
+        {
+          "id": 36,
+          "name": "speech_pacing_wpm",
+          "applies_to": "R",
+          "possible_values": "Numeric (integer). Unit: words per minute (WPM). Range: 0–300+. 0 = no speech detected. Reference benchmarks: slow/deliberate = 80–120 WPM; conversational = 120–160 WPM; fast/energetic = 160–200 WPM; rapid-fire = 200+ WPM. Analyze the full audio. Count only spoken words, exclude music/SFX duration from calculation.",
+          "model": "Whisper (free)",
+          "model_detail": "Whisper large-v3 (local) + calculation",
+          "prompt": "N/A — Two-step pipeline: (1) Run Whisper large-v3 to transcribe the full audio with timestamps. (2) Calculate: total_words = len(transcript.split()); speech_duration_minutes = (last_word_end_time - first_word_start_time) / 60. If speech_duration_minutes > 0: WPM = round(total_words / speech_duration_minutes). If no speech: return 0. Return only the integer WPM value."
+        },
+        {
+          "id": 37,
+          "name": "voice_tone_energy",
+          "applies_to": "R",
+          "possible_values": "high_energy_excited — fast, loud, enthusiastic, hype delivery; confident_authoritative — strong, steady, expert or teacher tone; calm_soothing — slow, soft, ASMR-like or relaxing; casual_conversational — natural, friend-talking-to-friend tone; dramatic_storytelling — theatrical, suspenseful, narrative voice; monotone_flat — low variation in pitch and energy; whisper_intimate — intentionally quiet, close-mic, personal; comedic_playful — joking, sarcastic, exaggerated for humor; not_applicable — no human voice present in the audio. Analyze the full audio track.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (audio input)",
+          "prompt": "Analyze the human voice tone and energy in this video's audio. What is the PRIMARY voice tone? Respond with exactly one value from this list: high_energy_excited; confident_authoritative; calm_soothing; casual_conversational; dramatic_storytelling; monotone_flat; whisper_intimate; comedic_playful; not_applicable. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 38,
+          "name": "background_music_mood",
+          "applies_to": "R",
+          "possible_values": "upbeat_happy — energetic, positive, feel-good; chill_lofi — relaxed, lo-fi beats, calm vibes; epic_cinematic — dramatic, orchestral, building tension; edgy_trap — dark beats, bass-heavy, hip-hop/trap; romantic_emotional — piano, strings, sentimental; quirky_playful — fun, cartoonish, comedic underscore; suspenseful_tense — building anxiety, horror-adjacent; trending_viral — recognizable viral sound or remix; ambient_minimal — barely noticeable background texture; none — no background music present. Analyze the full audio. If voice and music both exist, classify only the MUSIC mood.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (audio input)",
+          "prompt": "Analyze the background music (not the voice) in this video's audio. What is the mood of the background music? If there is no background music, respond \"none\". Respond with exactly one value from this list: upbeat_happy; chill_lofi; epic_cinematic; edgy_trap; romantic_emotional; quirky_playful; suspenseful_tense; trending_viral; ambient_minimal; none. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 39,
+          "name": "music_beat_sync",
+          "applies_to": "R",
+          "possible_values": "Boolean. yes — visual edits (cuts, transitions, text appearances, zoom effects) are noticeably synchronized to the beat or rhythm of the music; no — no detectable sync between visual edits and music beats; not_applicable — no music present or no visual edits to sync. Analyze the full video (audio + visual together).",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (video+audio input)",
+          "prompt": "Watch and listen to this entire video. Are the visual edits (cuts, transitions, text appearances, zoom effects) synchronized to the beat or rhythm of the background music? Respond with exactly one value: yes; no; not_applicable. Respond \"not_applicable\" if there is no music or no visual edits. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 40,
+          "name": "voice_to_music_balance",
+          "applies_to": "R",
+          "possible_values": "voice_dominant — voice is clearly louder, music is subtle or background; balanced — voice and music are at similar volume levels; music_dominant — music is louder, voice is hard to hear or secondary; voice_only — speech with no music at all; music_only — music with no speech at all; silent — no audio. Analyze the full audio track.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (audio input)",
+          "prompt": "Analyze the volume balance between voice and music in this video's audio. Respond with exactly one value from this list: voice_dominant; balanced; music_dominant; voice_only; music_only; silent. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 41,
+          "name": "audio_caption_availability",
+          "applies_to": "R",
+          "possible_values": "hardcoded_captions — burned-in text captions visible on the video frames that transcribe spoken audio; auto_captions — Instagram auto-generated captions enabled (detected via platform metadata); no_captions — no visible captions and no auto-captions enabled; not_applicable — no speech in the video to caption. For visual detection (hardcoded): analyze sampled frames from the video. For auto-captions: check Instagram API metadata.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (visual) + Instagram API metadata",
+          "prompt": "Analyze this video's frames. Are there burned-in text captions (hardcoded subtitles) visible on the video that transcribe spoken words? Do NOT count decorative text overlays, titles, or non-speech text. Respond with exactly one value: hardcoded_captions; no_captions; not_applicable. Respond \"not_applicable\" if there is no speech in the video. Return ONLY the value, nothing else. NOTE: \"auto_captions\" status is determined separately via Instagram API metadata and merged in post-processing."
+        }
+      ]
+    },
+    {
+      "name": "Content & Narrative",
+      "features": [
+        {
+          "id": 42,
+          "name": "content_category",
+          "applies_to": "R; C; I",
+          "possible_values": "educational_tips — teaches something, shares knowledge or advice; tutorial_howto — step-by-step instructions on how to do something; entertainment_humor — comedy, memes, skits, funny content; motivation_inspiration — uplifting quotes, success stories, pep talks; news_commentary — reacting to or reporting current events; behind_the_scenes — showing process, workspace, daily routine; product_review — reviewing, comparing, or unboxing a product; personal_story — sharing a personal experience, vulnerability, confession; lifestyle_aesthetic — aspirational visuals, \"day in my life\", aesthetic content; promotion_sales — directly selling a product or service, ad; trend_challenge — participating in a viral trend, challenge, or meme format; opinion_hot_take — strong opinion, debate-starting, controversial stance; community_engagement — polls, Q&A, \"tell me in the comments\", fan interaction; transformation — before/after, progress, makeover; curated_list — \"top 5…\", \"my favorites…\", list-style content. Analyze the FULL content (video + audio + on-screen text + caption).",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal: video/image + caption text)",
+          "prompt": "Analyze this ENTIRE piece of content (video/image + any visible text + the caption provided below). What is the PRIMARY content category? Respond with exactly one value from this list: educational_tips; tutorial_howto; entertainment_humor; motivation_inspiration; news_commentary; behind_the_scenes; product_review; personal_story; lifestyle_aesthetic; promotion_sales; trend_challenge; opinion_hot_take; community_engagement; transformation; curated_list. Return ONLY the value, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 43,
+          "name": "narrative_structure",
+          "applies_to": "R; C",
+          "possible_values": "problem_solution — presents a problem then offers the fix; story_arc — beginning, tension/conflict, resolution; listicle_sequential — numbered or sequential points (1, 2, 3…); before_after — shows transformation from state A to state B; question_answer — opens with a question, answers it; tutorial_steps — step-by-step instructional flow; reveal_buildup — builds suspense toward a single payoff moment; day_in_the_life — chronological slice of a routine or day; comparison — A vs. B, this or that, side-by-side evaluation; rant_monologue — unstructured direct-to-camera opinion or vent; montage_no_narrative — visual compilation with no clear story structure; single_point — one idea, no multi-part structure. For Reels: analyze the full video. For Carousel: analyze the slide flow from first to last.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal)",
+          "prompt": "Analyze the FULL narrative structure of this content (entire video for Reels, or all slides in order for Carousel). How is the story or information organized? Respond with exactly one value from this list: problem_solution; story_arc; listicle_sequential; before_after; question_answer; tutorial_steps; reveal_buildup; day_in_the_life; comparison; rant_monologue; montage_no_narrative; single_point. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 44,
+          "name": "value_proposition_type",
+          "applies_to": "R; C; I",
+          "possible_values": "learn_something — viewer gains knowledge, skill, or insight; feel_something — content triggers an emotion (laugh, cry, awe, anger); save_for_later — reference material worth bookmarking (recipe, checklist, resource list); share_with_others — relatable or funny enough to forward to a friend; buy_something — drives a purchase decision or product desire; aspire_to — makes viewer want to achieve or become something; belong_to — creates community feeling, \"this is so me\", identity content; escape_into — pure entertainment, escapism, satisfying to watch; no_clear_value — no obvious value proposition for the viewer. Analyze the full content + caption. What is the PRIMARY value the viewer receives?",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal + caption)",
+          "prompt": "Analyze this ENTIRE piece of content (video/image + any visible text + the caption below). What is the PRIMARY value proposition for the viewer — what do they GET from consuming this? Respond with exactly one value from this list: learn_something; feel_something; save_for_later; share_with_others; buy_something; aspire_to; belong_to; escape_into; no_clear_value. Return ONLY the value, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 45,
+          "name": "cta_type",
+          "applies_to": "R; C; I",
+          "possible_values": "like — asks for likes (\"double tap\", \"smash the like\"); comment — asks for comments (\"tell me below\", \"what do you think?\"); share — asks to share or tag (\"send this to a friend\", \"tag someone\"); save — asks to save (\"save this for later\", \"bookmark this\"); follow — asks to follow the account; link_click — directs to link in bio, swipe up, or external URL; buy_shop — asks to purchase, use discount code, or shop; multiple — two or more distinct CTAs present; none — no explicit call to action in content or caption. Analyze both the visual/audio content AND the caption text.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (text-only on caption + transcript)",
+          "prompt": "Analyze the following text (caption + spoken transcript from a social media post) for any explicit call to action directed at the viewer. What is the PRIMARY call to action? Respond with exactly one value from this list: like; comment; share; save; follow; link_click; buy_shop; multiple; none. Return ONLY the value, nothing else.\n\nCaption: {caption_text}\n\nSpoken transcript: {whisper_transcript}"
+        },
+        {
+          "id": 46,
+          "name": "educational_density",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–5. 0 = no educational content, purely entertainment or aesthetic; 1 = incidental, one minor fact or tip mentioned in passing; 2 = light, a couple of useful points but not the main focus; 3 = moderate, clearly teaches something with several concrete takeaways; 4 = dense, packed with actionable information, step-by-step; 5 = extremely dense, expert-level depth, could replace a class or article. Analyze the full content + caption.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal + caption)",
+          "prompt": "Analyze this ENTIRE piece of content (video/image + visible text + caption below). Rate the educational density — how much does the viewer actually learn? 0 = no educational content; 1 = one minor fact; 2 = a couple useful points; 3 = clearly teaches with concrete takeaways; 4 = dense, packed with actionable info; 5 = expert-level depth. Return ONLY a single integer from 0 to 5, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 47,
+          "name": "controversy_level",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–5. 0 = completely safe, universally agreeable content; 1 = mildly opinionated, but unlikely to spark debate; 2 = moderately divisive, some people will disagree; 3 = clearly controversial, designed to spark debate or strong reactions; 4 = highly polarizing, picks a side on a hot-button topic; 5 = extremely provocative, deliberately inflammatory or taboo-breaking. Analyze the full content + caption.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal + caption)",
+          "prompt": "Analyze this ENTIRE piece of content (video/image + visible text + caption below). Rate the controversy level — how likely is this to spark disagreement, debate, or strong opposing reactions? 0 = completely safe; 1 = mildly opinionated; 2 = moderately divisive; 3 = clearly controversial; 4 = highly polarizing; 5 = extremely provocative. Return ONLY a single integer from 0 to 5, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 48,
+          "name": "content_originality",
+          "applies_to": "R; C; I",
+          "possible_values": "fully_original — unique concept, original footage, not following any trend; original_on_trend_format — original idea but using a trending format, template, or sound; trend_remix — recognizable trend with the creator's own twist or niche spin; trend_replication — closely copies a trending format with minimal originality; duet_stitch — reacts to or builds on another creator's content (duet, stitch, reply); repurposed — content recycled from another platform (TikTok watermark, YouTube clip, podcast clip); ugc_repost — user-generated content reposted by a brand or aggregator page. Analyze the full content.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal)",
+          "prompt": "Analyze this ENTIRE piece of content. How original is it in the context of social media content creation? Respond with exactly one value from this list: fully_original; original_on_trend_format; trend_remix; trend_replication; duet_stitch; repurposed; ugc_repost. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 49,
+          "name": "emotional_arc",
+          "applies_to": "R; C",
+          "possible_values": "flat_consistent — same emotional tone throughout, no shift; positive_build — starts neutral or low, builds to a positive peak; negative_to_positive — starts with pain/problem, ends uplifting; positive_to_negative — starts positive, reveals a downside or twist; tension_and_release — builds anxiety or suspense, then resolves; rollercoaster — multiple emotional shifts throughout; shock_ending — steady tone with a sudden emotional twist at the end; gradual_decline — starts high energy, winds down by the end. For Reels: analyze the full video's emotional trajectory. For Carousel: analyze the emotional flow across all slides.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal)",
+          "prompt": "Analyze the FULL emotional trajectory of this content (entire video or all carousel slides in sequence). How does the emotional tone change from beginning to end? Respond with exactly one value from this list: flat_consistent; positive_build; negative_to_positive; positive_to_negative; tension_and_release; rollercoaster; shock_ending; gradual_decline. Return ONLY the value, nothing else."
+        },
+        {
+          "id": 50,
+          "name": "target_audience_intent",
+          "applies_to": "R; C; I",
+          "possible_values": "broad_mass_appeal — designed for anyone, no specific audience targeting; niche_expert — targets professionals or experts in a specific field; niche_beginner — targets beginners in a topic, 101-level content; identity_community — targets a specific identity group (\"moms\", \"founders\", \"gym bros\"); age_specific — clearly targets a generation or age group (Gen Z, millennials, etc.); local_geo — targets a specific city, region, or country; existing_followers — inside jokes, updates, or references only existing fans understand; buyer_intent — targets people ready to purchase or decide. Analyze the full content + caption.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal + caption)",
+          "prompt": "Analyze this ENTIRE piece of content (video/image + visible text + caption below). Who is the PRIMARY intended audience? Respond with exactly one value from this list: broad_mass_appeal; niche_expert; niche_beginner; identity_community; age_specific; local_geo; existing_followers; buyer_intent. Return ONLY the value, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 51,
+          "name": "information_pacing",
+          "applies_to": "R; C",
+          "possible_values": "rapid_fire — new information every few seconds, dense and fast; steady_moderate — consistent pace, digestible flow of ideas; slow_deliberate — takes time with each point, deep exploration; front_loaded — most information delivered in the first half, tapers off; back_loaded — builds slowly, key info or payoff comes at the end; single_idea — one concept explored or repeated throughout; not_applicable — content is non-informational (pure entertainment, aesthetic, music). For Reels: analyze the full video. For Carousel: analyze the information density across all slides.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (multimodal)",
+          "prompt": "Analyze how information is paced across this entire piece of content (full video or all carousel slides). At what rate is new information delivered to the viewer? Respond with exactly one value from this list: rapid_fire; steady_moderate; slow_deliberate; front_loaded; back_loaded; single_idea; not_applicable. Return ONLY the value, nothing else."
+        }
+      ]
+    },
+    {
+      "name": "Sensuality & Provocation",
+      "features": [
+        {
+          "id": 52,
+          "name": "skin_exposure_level",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no person visible or person is fully clothed with minimal skin showing (face and hands only); low — arms, lower legs, or collarbone area visible, typical casual wear; medium — midriff, upper thighs, or shoulders exposed, such as swimwear, crop tops, tank tops, shorts; high — significant skin exposure, bikini, underwear-adjacent styling, shirtless, very short or revealing clothing. For Reels: analyze a representative frame from the first 3 seconds. For Carousel: analyze the first slide. For Single Image: analyze the image. Classify the person with the MOST skin exposure if multiple people are visible.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "You are performing objective content classification for a data science study on Instagram engagement drivers. Analyze this image/frame and classify the level of skin exposure of the most prominent person. Respond with exactly one value from this list: none — no person or fully clothed (face/hands only); low — arms, lower legs, collarbone visible; medium — midriff, upper thighs, shoulders (swimwear, crop tops, shorts); high — significant exposure (bikini, shirtless, very revealing clothing). Return ONLY the value (none, low, medium, or high), nothing else."
+        },
+        {
+          "id": 53,
+          "name": "hook_sensuality_level",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no sensual or suggestive elements in the opening; low — subtle attractiveness emphasis, good lighting on face, styled appearance, but no suggestive intent; medium — deliberate sensual framing such as slow motion on body, lip-biting, hair-flipping, suggestive eye contact, tight framing on curves, or provocative text overlay; high — overtly provocative opening designed to stop scrolling through strong sexual signaling, such as undressing tease, highly suggestive movement, or explicit body-focused camera angles. For Reels: analyze ONLY the first 3 seconds. For Carousel: first slide only. For Single Image: the image. This measures whether sensuality is used as a HOOK tactic specifically.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "You are performing objective content classification for a data science study on Instagram scroll-stopping tactics. Analyze ONLY the opening of this content (first 3 seconds for video, or the first image/slide). To what degree is sensuality or physical attractiveness used as a deliberate hook to capture attention? Respond with exactly one value from this list: none — no sensual elements; low — subtle attractiveness, styled but not suggestive; medium — deliberate sensual framing (slow-mo on body, lip-bite, suggestive eye contact, provocative text); high — overtly provocative (undressing tease, highly suggestive movement, explicit body-focused angles). Return ONLY the value (none, low, medium, or high), nothing else."
+        },
+        {
+          "id": 54,
+          "name": "suggestive_body_language",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no person visible, or body language is neutral/functional with no suggestive elements; low — confident posing, hands on hips, over-the-shoulder glance, modeling-style poses that are attractive but not overtly suggestive; medium — deliberately provocative poses or movement such as hip emphasis, chest-forward posture, bending, hair play, tongue out, dancing with body-rolling, slow-motion walks; high — highly sexualized body language such as twerking, grinding motions, explicit thirst-trap posing, bed/floor poses with suggestive positioning, or movements that mime sexual acts. For Reels: analyze the full video. For Carousel: analyze all slides. For Single Image: analyze the image.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o",
+          "prompt": "You are performing objective content classification for a data science study on engagement tactics. Analyze the body language and physical movement in this content (full video for Reels, all slides for Carousel, or the image). To what degree is body language deliberately suggestive or provocative? Respond with exactly one value from this list: none — neutral, no suggestive elements; low — confident posing, modeling-style, attractive but not suggestive; medium — deliberately provocative (hip emphasis, body-rolling, hair play, bending, slow-motion walks); high — highly sexualized (twerking, grinding, explicit thirst-trap posing, bed/floor poses). Return ONLY the value (none, low, medium, or high), nothing else."
+        },
+        {
+          "id": 55,
+          "name": "innuendo_in_text",
+          "applies_to": "R; C; I",
+          "possible_values": "none — no suggestive language in on-screen text or caption; low — mildly flirty or playful language, double entendre that could be innocent; medium — clearly suggestive language, sexual innuendo, provocative questions, or thirst-bait phrasing (\"come closer\", \"you can't handle this\"); high — overtly sexual text, explicit references, or language designed to sexually provoke. Analyze both on-screen text overlays AND the caption text.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (text-only on caption + transcript + OCR text)",
+          "prompt": "You are performing objective content classification for a data science study. Analyze the following text from a social media post for sexual innuendo or suggestive language. Respond with exactly one value from this list: none — no suggestive language; low — mildly flirty, could be innocent; medium — clearly suggestive, sexual innuendo, thirst-bait phrasing; high — overtly sexual or explicit references. Return ONLY the value (none, low, medium, or high), nothing else.\n\nOn-screen text: {ocr_text}\nCaption: {caption_text}\nSpoken transcript: {whisper_transcript}"
+        },
+        {
+          "id": 56,
+          "name": "overall_provocation_score",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–10. Composite score combining ALL provocation signals (skin exposure, sensual framing, suggestive body language, innuendo, provocative styling). 0 = completely non-provocative, family-friendly content with no sensual elements; 1–2 = minimal, incidental attractiveness with no deliberate provocation; 3–4 = mild, some deliberate attractiveness emphasis but within mainstream norms; 5–6 = moderate, clearly uses physical attractiveness or suggestiveness as an engagement tactic; 7–8 = high, content leans heavily into sensuality or provocation as the primary draw; 9–10 = extreme, content is primarily about physical/sexual provocation, borderline platform-policy. Analyze the FULL content (video + on-screen text + caption). This is a holistic score, not just visual.",
+          "model": "GPT-4o",
+          "model_detail": "GPT-4o (multimodal + caption)",
+          "prompt": "You are performing objective content classification for a data science study on Instagram engagement drivers. Analyze this ENTIRE piece of content (video/image + all visible text + caption below) holistically. Rate the overall level of sensuality and provocation used as an engagement tactic on a scale from 0 to 10. 0 = completely non-provocative; 1-2 = minimal, incidental attractiveness; 3-4 = mild, some attractiveness emphasis; 5-6 = moderate, clearly uses suggestiveness as a tactic; 7-8 = high, sensuality is a primary draw; 9-10 = extreme, primarily about physical/sexual provocation. Return ONLY a single integer from 0 to 10, nothing else.\n\nCaption: {caption_text}"
+        }
+      ]
+    },
+    {
+      "name": "Text & Copy",
+      "features": [
+        {
+          "id": 57,
+          "name": "caption_length_chars",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Unit: characters. Range: 0–2200 (Instagram's caption limit). 0 = no caption or empty caption. Reference benchmarks: micro = 1–50 chars (one-liner or emoji-only); short = 51–150 chars (1–2 sentences); medium = 151–500 chars (a paragraph); long = 501–1000 chars (storytelling length); very_long = 1001–2200 chars (maxed-out, newsletter-style). Count includes all characters: letters, spaces, emojis, hashtags, mentions. Excludes any auto-generated metadata.",
+          "model": "Local (free)",
+          "model_detail": "Programmatic / no AI needed",
+          "prompt": "N/A — Extract programmatically: len(caption_text). Return the integer character count. If caption is null or empty, return 0."
+        },
+        {
+          "id": 58,
+          "name": "hashtag_count",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–30 (Instagram's hashtag limit). 0 = no hashtags used. Count all hashtags in the caption text, including those in comments if Genna captures first-comment hashtags.",
+          "model": "Local (free)",
+          "model_detail": "Programmatic / no AI needed",
+          "prompt": "N/A — Extract programmatically using regex: len(re.findall(r'#\\w+', caption_text)). Return the integer count. If no hashtags, return 0."
+        },
+        {
+          "id": 59,
+          "name": "caption_first_line_hook",
+          "applies_to": "R; C; I",
+          "possible_values": "question — opens with a question to the reader; bold_statement — opens with a strong claim, opinion, or surprising fact; story_opener — starts with a narrative hook (\"I never expected…\", \"Last week I…\"); direct_address — speaks directly to reader (\"You need to know this\", \"If you…\"); list_tease — previews a list (\"3 things that changed my…\", \"Here's what nobody tells you\"); emoji_or_reaction — opens with emojis or an exclamation-style reaction; contextual_label — simple label or context (\"New recipe!\", \"POV:\", \"Day 30 of…\"); cta_opener — opens with a call to action (\"Save this\", \"Share with someone who…\"); none_or_empty — no caption, empty, or first line has no discernible hook strategy. Analyze ONLY the first line of the caption (text before the first line break, or the first 150 characters if no line break exists). The caption may be in any language.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (text-only)",
+          "prompt": "Analyze ONLY the first line of this Instagram caption (the text a user sees before tapping \"more\"). What hook strategy is used? The caption may be in any language — classify the intent regardless of language. Respond with exactly one value from this list: question; bold_statement; story_opener; direct_address; list_tease; emoji_or_reaction; contextual_label; cta_opener; none_or_empty. Return ONLY the value, nothing else.\n\nCaption first line: {caption_first_line}"
+        },
+        {
+          "id": 60,
+          "name": "caption_tone",
+          "applies_to": "R; C; I",
+          "possible_values": "professional_authoritative — expert voice, polished, brand-safe, formal; casual_conversational — friendly, relaxed, like texting a friend; humorous_playful — jokes, sarcasm, memes, witty wordplay; inspirational_motivational — uplifting, empowering, coach-like; vulnerable_personal — raw, emotional, diary-style confessional; salesy_promotional — promotional language, discount codes, urgency tactics; educational_informative — factual, structured, teacher-like; provocative_edgy — deliberately controversial, hot-take, confrontational; minimal_cryptic — very short or vague, no clear tone (\".\", \"👀\", single emoji); none — no caption or empty. Analyze the FULL caption text. The caption may be in any language.",
+          "model": "Gemini Flash",
+          "model_detail": "Gemini 2.0 Flash (text-only)",
+          "prompt": "Analyze the tone and voice of this Instagram caption. The caption may be in any language — classify the tone regardless of language. Respond with exactly one value from this list: professional_authoritative; casual_conversational; humorous_playful; inspirational_motivational; vulnerable_personal; salesy_promotional; educational_informative; provocative_edgy; minimal_cryptic; none. Return ONLY the value, nothing else.\n\nCaption: {caption_text}"
+        },
+        {
+          "id": 61,
+          "name": "emoji_density",
+          "applies_to": "R; C; I",
+          "possible_values": "none — zero emojis in the caption; low — 1–3 emojis, subtle usage; medium — 4–10 emojis, used for emphasis or section breaks; high — 11–20 emojis, emoji-heavy communication style; extreme — 21+ emojis, emojis dominate the caption or replace words. Count all emoji characters in the caption text.",
+          "model": "Local (free)",
+          "model_detail": "Programmatic / no AI needed",
+          "prompt": "N/A — Extract programmatically using the emoji library or Unicode emoji regex. Count all emoji characters: emoji_count = len([c for c in caption_text if c in emoji.EMOJI_DATA]) or use regex for Unicode emoji ranges. Classify: 0 → none; 1-3 → low; 4-10 → medium; 11-20 → high; 21+ → extreme. Return only the category string."
+        },
+        {
+          "id": 62,
+          "name": "account_mentions_count",
+          "applies_to": "R; C; I",
+          "possible_values": "Numeric (integer). Range: 0–20+. 0 = no @mentions in the caption. Count all @username mentions in the caption text. Useful for detecting collaboration signals, brand tagging, community engagement, and user-generated content patterns.",
+          "model": "Local (free)",
+          "model_detail": "Programmatic / no AI needed",
+          "prompt": "N/A — Extract programmatically using regex: len(re.findall(r'@\\w+', caption_text)). Return the integer count. If no mentions, return 0."
+        }
+      ]
+    }
+  ],
+  "model_summary": {
+    "GPT-4o": 28,
+    "Gemini Flash": 23,
+    "Local (free)": 7,
+    "Whisper (free)": 2,
+    "API metadata": 1,
+    "Mixed": 1
+  },
+  "source_spreadsheet": "https://docs.google.com/spreadsheets/d/1SGxhH_HT45tuM1ccmtsOG2uBnjeXNOxR/edit"
+}
