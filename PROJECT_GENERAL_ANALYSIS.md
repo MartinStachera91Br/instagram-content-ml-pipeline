@@ -10,7 +10,7 @@ Construir um pipeline de Data Science que cruza **métricas de performance** do 
 
 ### 1.1 Arquivos de Mídia (Post Storage)
 - **Localização:** `máquina de conteúdo/Post Storage/`
-- **Quantidade atual:** 484 arquivos (480 do genna.brasil + 4 do 4blueoficial)
+- **Quantidade atual:** 484 arquivos (480 do perfil principal + 4 de outro perfil)
 - **Formatos:** `.mp4` (reels/vídeos), `.jpg`, `.webp` (imagens)
 - **Padrão de nome:** `{username}_{unix_timestamp}_{post_id}_{user_id}.{ext}`
 - **Exemplo:** `profile_1774402267_<POST_ID>_<USER_ID>.mp4`
@@ -141,7 +141,7 @@ Colunas esperadas:
 ## 5. Dev Setup
 
 ### Pré-requisitos
-- Python 3.14 (instalado em via `py` launcher)
+- Python 3.14 (instalado via `py` launcher)
 - FFmpeg (necessário para `ffmpeg-python` e Whisper) — instalar separadamente
 - API keys: OpenAI (GPT-4o) e Google AI (Gemini Flash)
 
